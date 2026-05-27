@@ -1,0 +1,71 @@
+# Data manifest. Every external pull is keyed by `name` and checked
+# against `sha256` after download. `snapshotDate` is the date we
+# verified the URL still serves the expected content.
+#
+# Entries with sha256: 'pending' need a one-time verification run; the
+# next successful cacheFetch will write a sha256-stamped sister file
+# under data/raw/.sha/.
+
+yahoo:
+  - name: SPX
+    ticker: ^GSPC
+    start: 2014-01-01
+    end:   2024-01-01
+    url:   https://query1.finance.yahoo.com/v7/finance/download/%5EGSPC?period1={start_unix}&period2={end_unix}&interval=1d&events=history
+    snapshotDate: 2026-05-16
+    sha256: pending
+  - name: N225
+    ticker: ^N225
+    start: 2014-01-01
+    end:   2024-01-01
+    url:   https://query1.finance.yahoo.com/v7/finance/download/%5EN225?period1={start_unix}&period2={end_unix}&interval=1d&events=history
+    snapshotDate: 2026-05-16
+    sha256: pending
+  - name: DJI
+    ticker: ^DJI
+    url:   https://query1.finance.yahoo.com/v7/finance/download/%5EDJI?period1={start_unix}&period2={end_unix}&interval=1d&events=history
+    snapshotDate: 2026-05-16
+    sha256: pending
+
+realizedLibrary:
+  - name: Liu2025_RealRECH_panel
+    url:  https://raw.githubusercontent.com/VBayesLab/RealRECH/main/data/realized_panel.csv
+    snapshotDate: 2026-05-16
+    sha256: pending
+  - name: OMI_archive_wayback
+    url:  https://web.archive.org/web/20220601000000id_/https://realized.oxford-man.ox.ac.uk/api/data
+    snapshotDate: 2026-05-16
+    sha256: pending
+
+fred:
+  - {name: VIX,    series: VIXCLS,           snapshotDate: 2026-05-16, sha256: pending}
+  - {name: OIL,    series: DCOILWTICO,       snapshotDate: 2026-05-16, sha256: pending}
+  - {name: GOLD,   series: GOLDAMGBD228NLBM, snapshotDate: 2026-05-16, sha256: pending}
+  - {name: USDVND, series: DEXVNUS,          snapshotDate: 2026-05-16, sha256: pending}
+  - {name: INDPRO, series: INDPRO,           snapshotDate: 2026-05-16, sha256: pending}
+  - {name: UNRATE, series: UNRATE,           snapshotDate: 2026-05-16, sha256: pending}
+  - {name: CPI,    series: CPIAUCSL,         snapshotDate: 2026-05-16, sha256: pending}
+
+investing:
+  # 5-market panel from RECH-X §4.2 — manually downloaded once and
+  # checked into data/raw/investing/. Checksums pinned here.
+  - name: VN100
+    file: data/raw/investing/VN100_2015-01-01_2023-04-30.csv
+    sha256: pending
+  - name: ASX
+    file: data/raw/investing/ASX_2015-01-01_2023-04-30.csv
+    sha256: pending
+
+vietnam:
+  - name: VN-Index
+    source: vnstock
+    start: 2016-01-04
+    end:   2025-01-31
+    snapshotDate: 2026-05-16
+    sha256: pending
+  - name: HNX-Index
+    source: vnstock
+    start: 2016-01-04
+    end:   2025-01-31
+    snapshotDate: 2026-05-16
+    sha256: pending

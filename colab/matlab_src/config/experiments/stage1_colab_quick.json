@@ -1,0 +1,42 @@
+{
+  "dgp": {
+    "theta_true": [
+      -0.5,
+      0.95,
+      0.25,
+      -0.5,
+      8,
+      0.05,
+      0.2,
+      0.05,
+      -0.05,
+      0.05,
+      0.1,
+      0.0
+    ],
+    "T": 600,
+    "nCovariates": 0,
+    "leverage": "cholesky"
+  },
+  "simulation": {
+    "nReplicates": 5,
+    "nSeeds": 2,
+    "baseSeed": 20260516
+  },
+  "smc": {
+    "N": 500,
+    "M": 80,
+    "nSweeps": 3,
+    "proposalScale": 0.4,
+    "essThreshold": 0.5,
+    "targetEss": 0.5,
+    "verbose": false
+  },
+  "particleFilter": {
+    "clipLogWeight": -50
+  },
+  "colab": {
+    "savePosteriors": true,
+    "saveSimulations": true
+  }
+}

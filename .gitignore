@@ -1,0 +1,60 @@
+# Data and results are reproducible from configs + fetchers
+data/raw/
+data/processed/
+results/
+
+# MATLAB
+*.asv
+*.m~
+*.mat
+*.mex*
+slprj/
+sccprj/
+*.slxc
+*.slx.autosave
+*.mlapp.autosave
+*.m.autosave
+*.dmr
+
+# R
+.Rhistory
+.RData
+.Ruserdata
+.Rproj.user/
+*.Rcheck/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.venv/
+venv/
+env/
+.ipynb_checkpoints/
+.pytest_cache/
+.coverage
+htmlcov/
+.mypy_cache/
+.tox/
+build/
+dist/
+*.egg-info/
+pip-log.txt
+
+# OS & Environment
+.DS_Store
+Thumbs.db
+.env
+.env.local
+.env.*.local
+*.env
+*.log
+*~
+
+# Editors & Tools
+.vscode/
+.idea/
+*.swp
+*.swo
+.claude/

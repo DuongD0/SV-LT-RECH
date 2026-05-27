@@ -1,0 +1,36 @@
+# Stage 4 — Vietnam VN-Index empirical application (PROPOSED_METHODOLOGY §11.4).
+# Fixed-parameter rolling OOS (docs/PHASE_5_PLAN.md §3). Run locally:
+#   matlab -batch "addpath(pwd); pyenv('Version','.venv/bin/python'); run('scripts/run_stage4_vietnam.m')"
+
+market: VNINDEX
+
+data:
+  start:        '2016-01-04'
+  end:          '2025-01-31'
+  trainEnd:     1500            # 1500 train / rest test (NEU thesis §3.5.3)
+  covariates:   [oil, usdvnd, btc, gold]
+
+model:
+  nCovariates: 4
+  leverage:    cholesky
+
+smc:
+  N:             2000
+  M:             200
+  nSweeps:       5
+  proposalScale: 0.5
+  essThreshold:  0.5
+  targetEss:     0.5
+  verbose:       false
+
+forecast:
+  J: 200                        # thinned posterior particles for rolling predictive
+
+eval:
+  alphaQS: [0.01, 0.05]         # VaR levels for the quantile score
+  mcsB:    2000                 # MCS bootstrap replicates
+
+particleFilter:
+  clipLogWeight: -50
+
+baseSeed: 20260516

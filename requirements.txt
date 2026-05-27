@@ -1,0 +1,25 @@
+# Python dependencies for the data layer.
+#
+# Use:
+#   python3 -m venv .venv
+#   source .venv/bin/activate
+#   pip install -r requirements.txt
+#
+# MATLAB calls vnstock via Python interop (pyenv). The other packages
+# back fallback fetchers that talk to Yahoo / FRED / CBOE when MATLAB's
+# webread is awkward.
+
+# Core
+numpy>=1.26
+pandas>=2.2
+pyyaml>=6.0
+requests>=2.32
+python-dateutil>=2.9
+
+# Market data
+yfinance>=0.2.40
+pandas-datareader>=0.10.0    # FRED, Stooq, etc.
+vnstock>=3.2.0               # Vietnam HOSE/HNX/UPCoM data
+
+# Optional: notebooks for ad-hoc analysis
+jupyterlab>=4.2

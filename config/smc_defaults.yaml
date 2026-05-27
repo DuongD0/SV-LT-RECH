@@ -1,0 +1,24 @@
+# Default SMC hyperparameters (PROPOSED_METHODOLOGY.md §9.7).
+#
+# Experiment configs in config/experiments/*.yaml may override any of
+# these; loadConfig deep-merges experiment over defaults.
+
+smc:
+  N: 5000               # parameter particles
+  M: 200                # latent-state particles per parameter particle
+  essThreshold: 0.5     # resample when ESS < essThreshold * N
+  targetEss: 0.5        # anneal-bisection target (fraction of N)
+  nSweeps: 10           # RWM sweeps per anneal step
+  proposalScale: 0.5    # scale on empirical-cov RWM proposal
+
+particleFilter:
+  M: 200
+  resample: systematic
+  essThreshold: 0.5
+  clipLogWeight: -50    # only used for Student-t / leverage / RNN models
+
+reproducibility:
+  baseSeed: 20260516
+  nReplicates: 10       # independent SMC runs per (market, model)
+
+verbose: true

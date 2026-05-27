@@ -1,0 +1,21 @@
+{
+  "smc": {
+    "N": 5000,
+    "M": 200,
+    "essThreshold": 0.5,
+    "targetEss": 0.5,
+    "nSweeps": 10,
+    "proposalScale": 0.5
+  },
+  "particleFilter": {
+    "M": 200,
+    "resample": "systematic",
+    "essThreshold": 0.5,
+    "clipLogWeight": -50
+  },
+  "reproducibility": {
+    "baseSeed": 20260516,
+    "nReplicates": 10
+  },
+  "verbose": true
+}

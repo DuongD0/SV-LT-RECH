@@ -1,0 +1,34 @@
+# Prior specifications per model class (PROPOSED_METHODOLOGY.md §9.1).
+#
+# Human-readable cross-reference. Authoritative implementation lives in
+# +priors/logPrior*.m for each model class.
+
+SV:
+  mu:        {dist: normal,      mean: 0,   sd: 10}
+  phi:       {dist: betaShifted, alpha: 20, beta: 1.5}   # (1+phi)/2 ~ Beta(20, 1.5)
+  sigma_eta: {dist: halfCauchy,  scale: 1}
+
+SVt:
+  mu:        {dist: normal,      mean: 0,   sd: 10}
+  phi:       {dist: betaShifted, alpha: 20, beta: 1.5}
+  sigma_eta: {dist: halfCauchy,  scale: 1}
+  nu:        {dist: gamma,       shape: 1,  rate: 0.1}
+
+SVLT:
+  mu:        {dist: normal,      mean: 0,   sd: 10}
+  phi:       {dist: betaShifted, alpha: 20, beta: 1.5}
+  sigma_eta: {dist: halfCauchy,  scale: 1}
+  rho:       {dist: uniform,     lo: -1, hi: 1}
+  nu:        {dist: gamma,       shape: 1,  rate: 0.1}
+
+SVLTRECH:    # SVLTRECHlstm and SVLTRECHgru add cell-specific weights below
+  mu:        {dist: normal,      mean: 0,   sd: 10}
+  phi:       {dist: betaShifted, alpha: 20, beta: 1.5}
+  sigma_eta: {dist: halfCauchy,  scale: 1}
+  rho:       {dist: uniform,     lo: -1, hi: 1}
+  nu:        {dist: gamma,       shape: 1,  rate: 0.1}
+  beta0:     {dist: uniform,     lo: 0, hi: 0.5}
+  beta1:     {dist: uniform,     lo: 0, hi: 0.5}
+  rnnInputWeights: {dist: normal, mean: 0, sd: 0.1}      # v
+  rnnRecurrent:    {dist: normal, mean: 0, sd: 0.1}      # w_h, b
+  covariateCoef:   {dist: normal, mean: 0, sd: 0.5}      # v_z

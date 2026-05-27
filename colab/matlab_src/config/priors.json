@@ -1,0 +1,116 @@
+{
+  "SV": {
+    "mu": {
+      "dist": "normal",
+      "mean": 0,
+      "sd": 10
+    },
+    "phi": {
+      "dist": "betaShifted",
+      "alpha": 20,
+      "beta": 1.5
+    },
+    "sigma_eta": {
+      "dist": "halfCauchy",
+      "scale": 1
+    }
+  },
+  "SVt": {
+    "mu": {
+      "dist": "normal",
+      "mean": 0,
+      "sd": 10
+    },
+    "phi": {
+      "dist": "betaShifted",
+      "alpha": 20,
+      "beta": 1.5
+    },
+    "sigma_eta": {
+      "dist": "halfCauchy",
+      "scale": 1
+    },
+    "nu": {
+      "dist": "gamma",
+      "shape": 1,
+      "rate": 0.1
+    }
+  },
+  "SVLT": {
+    "mu": {
+      "dist": "normal",
+      "mean": 0,
+      "sd": 10
+    },
+    "phi": {
+      "dist": "betaShifted",
+      "alpha": 20,
+      "beta": 1.5
+    },
+    "sigma_eta": {
+      "dist": "halfCauchy",
+      "scale": 1
+    },
+    "rho": {
+      "dist": "uniform",
+      "lo": -1,
+      "hi": 1
+    },
+    "nu": {
+      "dist": "gamma",
+      "shape": 1,
+      "rate": 0.1
+    }
+  },
+  "SVLTRECH": {
+    "mu": {
+      "dist": "normal",
+      "mean": 0,
+      "sd": 10
+    },
+    "phi": {
+      "dist": "betaShifted",
+      "alpha": 20,
+      "beta": 1.5
+    },
+    "sigma_eta": {
+      "dist": "halfCauchy",
+      "scale": 1
+    },
+    "rho": {
+      "dist": "uniform",
+      "lo": -1,
+      "hi": 1
+    },
+    "nu": {
+      "dist": "gamma",
+      "shape": 1,
+      "rate": 0.1
+    },
+    "beta0": {
+      "dist": "uniform",
+      "lo": 0,
+      "hi": 0.5
+    },
+    "beta1": {
+      "dist": "uniform",
+      "lo": 0,
+      "hi": 0.5
+    },
+    "rnnInputWeights": {
+      "dist": "normal",
+      "mean": 0,
+      "sd": 0.1
+    },
+    "rnnRecurrent": {
+      "dist": "normal",
+      "mean": 0,
+      "sd": 0.1
+    },
+    "covariateCoef": {
+      "dist": "normal",
+      "mean": 0,
+      "sd": 0.5
+    }
+  }
+}

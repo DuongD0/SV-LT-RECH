@@ -1,0 +1,27 @@
+# Stage 1 SMOKE config -- CI-sized variant of stage1.yaml.
+# Designed to finish in <= 5 min wall-clock on a single CPU; tunes
+# nReplicates, nSeeds, T, N, M downward. Goes through the same code
+# paths as the full study so a regression in any layer surfaces.
+
+dgp:
+  theta_true: [-0.5, 0.95, 0.25, -0.5, 8, 0.05, 0.20, 0.05, -0.05, 0.05, 0.1, 0.0]
+  T:           200
+  nCovariates: 0
+  leverage:    cholesky
+
+simulation:
+  nReplicates: 2
+  nSeeds:      2                # minimum for non-trivial R-hat
+  baseSeed:    20260516
+
+smc:
+  N:             200
+  M:             40
+  nSweeps:       2
+  proposalScale: 0.4
+  essThreshold:  0.5
+  targetEss:     0.5
+  verbose:       false
+
+particleFilter:
+  clipLogWeight: -50

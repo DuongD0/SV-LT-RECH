@@ -1,0 +1,29 @@
+# Stage 1 simulation-study config (PROPOSED_METHODOLOGY.md §11.1 +
+# phase log §4.4). FULL study: heavy compute, run manually via
+#   matlab -batch "addpath(pwd); run('scripts/run_stage1_simulation.m')"
+# A CI-sized variant lives in stage1_smoke.yaml for tSimulatorRoundTrip.
+
+dgp:
+  # theta_true ordering: [mu, phi, sigma_eta, rho, nu, beta_0, beta_1,
+  #                       v_h, v_r, v_omega, w_h, b]
+  theta_true: [-0.5, 0.97, 0.25, -0.5, 8, 0.05, 0.20, 0.05, -0.05, 0.05, 0.1, 0.0]
+  T:           2000
+  nCovariates: 0
+  leverage:    cholesky        # 'cholesky' or 'ocsn'
+
+simulation:
+  nReplicates: 30
+  nSeeds:      3                # independent SMC seeds per replicate (R-hat)
+  baseSeed:    20260516
+
+smc:
+  N:             2000           # parameter particles per SMC run
+  M:             200            # latent particles per parameter particle
+  nSweeps:       5              # RWM rejuvenation sweeps per anneal step
+  proposalScale: 0.5
+  essThreshold:  0.5
+  targetEss:     0.5
+  verbose:       false
+
+particleFilter:
+  clipLogWeight: -50
