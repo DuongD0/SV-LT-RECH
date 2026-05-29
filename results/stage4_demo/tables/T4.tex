@@ -1,0 +1,17 @@
+\begin{table}[htbp]
+\centering
+\caption{Table T4}
+\label{tab:T4}
+\begin{tabular}{llllllll}
+\toprule
+Model & PPS & QS1 & QS5 & MSE & MAE & R2LOG & QLIKE \\
+\midrule
+GARCH-t & 1.7 & 0.0401 & 0.145 & \textbf{0.848} & \textbf{0.773} & \textbf{5.57} & 1.6 \\
+GJR-t & 1.71 & 0.0392 & 0.143 & 1.03 & 0.862 & 6.08 & 1.61 \\
+SVLT & 1.71 & 0.0573 & 0.188 & 2.52 & 1.44 & 9.56 & 2.04 \\
+SVLTRECH-SRN & \textbf{1.7} & \textbf{0.0333} & \textbf{0.137} & 0.864 & 0.788 & 5.66 & \textbf{1.56} \\
+SVLTRECH-LSTM & 1.7 & 0.0383 & 0.138 & 1.03 & 0.881 & 6.33 & 1.61 \\
+SVLTRECH-GRU & 1.7 & 0.0383 & 0.144 & 0.891 & 0.806 & 5.82 & 1.58 \\
+\bottomrule
+\end{tabular}
+\end{table}

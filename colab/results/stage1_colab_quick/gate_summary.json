@@ -1,0 +1,56 @@
+{
+  "stage1_complete_at": "2026-05-17 11:13:47",
+  "config_file": "/home/d0/projects/finance_eng/colab/matlab_src/config/experiments/stage1_colab_quick.json",
+  "paramNames": [
+    "mu",
+    "phi",
+    "sigma_eta",
+    "rho",
+    "nu",
+    "beta_0",
+    "beta_1",
+    "v_h",
+    "v_r",
+    "v_omega",
+    "w_h",
+    "b"
+  ],
+  "coverage95_per_param": [
+    1,
+    1,
+    1,
+    0.8,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1
+  ],
+  "gates": {
+    "coverage_95_min": {
+      "value": 0.8,
+      "target": ">= 0.9",
+      "pass": false
+    },
+    "rhat_max": {
+      "value": 1.2010949377235758,
+      "target": "<= 1.1",
+      "pass": false
+    },
+    "mcse_logz_max": {
+      "value": 0.77845163593315181,
+      "target": "<= 0.5",
+      "pass": false
+    },
+    "sign_flip_max": {
+      "value": 0,
+      "target": "< 0.05",
+      "pass": true
+    }
+  },
+  "overall": "FAIL",
+  "next_step": "One or more §4.5 gates failed. Inspect recovery.csv + mcse_logml.csv before launching Phase 4. Likely fix points: (a) switch leverage to 'ocsn' via stage1_colab.yaml; (b) increase N or M in smc block; (c) build the auxiliary PF (+inference/+pf/auxiliary.m) for fatter-tailed regimes."
+}
