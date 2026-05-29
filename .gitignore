@@ -1,7 +1,6 @@
 # Data and results are reproducible from configs + fetchers
 data/raw/
 data/processed/
-results/
 
 # MATLAB
 *.asv

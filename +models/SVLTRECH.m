@@ -203,6 +203,40 @@ classdef SVLTRECH < models.Model
             end
         end
 
+        %% ---- Interpretability ------------------------------------
+
+        function omega = omegaPath(obj, theta, hPath, yPath)
+        % omega = omegaPath(theta, hPath, yPath)
+        % Deterministic recurrent-state path omega_t given a parameter
+        % vector and a (filtered) latent-/return-path. Replays the same SRN
+        % recurrence as `simulate`. omega_1 == beta_0 (s_1 == 0). For F4.
+            arguments
+                obj
+                theta (1,:) double
+                hPath (:,1) double
+                yPath (:,1) double
+            end
+            s = obj.unpack(theta);
+            T = numel(hPath);
+            omega = zeros(T, 1);
+            omega(1) = s.beta_0;
+            sPrev = 0; omegaPrev = s.beta_0;
+            for t = 2:T
+                if obj.nCovariates > 0
+                    zRow = obj.Z(t - 1, :);
+                else
+                    zRow = [];
+                end
+                xRow = [hPath(t - 1), yPath(t - 1), omegaPrev, zRow];
+                w    = struct('v',   [s.v_h, s.v_r, s.v_omega, s.v_z(:)'], ...
+                              'w_h', s.w_h, 'b', s.b);
+                sNew      = cells.srn(xRow, sPrev, w);
+                omega(t)  = s.beta_0 + s.beta_1 * sNew;
+                sPrev     = sNew;
+                omegaPrev = omega(t);
+            end
+        end
+
         %% ---- Packing --------------------------------------------
 
         function s = unpack(obj, theta)

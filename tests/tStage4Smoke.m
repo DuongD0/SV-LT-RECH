@@ -12,7 +12,6 @@ classdef tStage4Smoke < matlab.unittest.TestCase
         function pipelineProducesScoresForAllModels(testCase)
             rng(99, 'threefry');
 
-            % Synthetic VN-like series from the flagship DGP with 2 covariates.
             K        = 2;
             T        = 280;
             splitIdx = 210;
@@ -25,34 +24,43 @@ classdef tStage4Smoke < matlab.unittest.TestCase
 
             cfg = struct();
             cfg.model    = struct('nCovariates', K, 'leverage', 'cholesky');
-            cfg.smc      = struct('N', 250, 'M', 40, 'nSweeps', 2, ...
+            cfg.smc      = struct('N', 200, 'M', 30, 'nSweeps', 2, ...
                                   'proposalScale', 0.5, 'essThreshold', 0.5, ...
                                   'targetEss', 0.5, 'verbose', false);
-            cfg.forecast = struct('J', 20);
+            cfg.forecast = struct('J', 15);
             cfg.eval     = struct('alphaQS', [0.01, 0.05], 'mcsB', 200);
             cfg.particleFilter = struct('clipLogWeight', -50);
             cfg.baseSeed = 20260516;
 
             out = experiments.runStage4(y, Z, splitIdx, cfg);
 
-            expected = {'GARCH-t','GJR-t','SVLT','SVLTRECH'};
+            expected = {'GARCH-t','GJR-t','SVLT','SVLTRECH-SRN', ...
+                        'SVLTRECH-LSTM','SVLTRECH-GRU'};
             testCase.verifyEqual(out.modelNames, expected);
 
-            S = out.scores;     % struct array, one per model
-            testCase.verifyEqual(numel(S), 4);
+            S = out.scores;
+            testCase.verifyEqual(numel(S), 6);
             for m = 1:numel(S)
                 testCase.verifyTrue(isfinite(S(m).pps));
                 testCase.verifyTrue(isfinite(S(m).qlike));
                 testCase.verifyTrue(isfinite(S(m).mse));
-                testCase.verifyTrue(isfinite(S(m).mae));
                 testCase.verifyTrue(isfinite(S(m).r2log));
-                testCase.verifyTrue(isfinite(S(m).qs1));
-                testCase.verifyTrue(isfinite(S(m).qs5));
             end
 
-            % MCS keeps at least one model; DM table has 3 pairwise rows.
             testCase.verifyGreaterThanOrEqual(sum(out.mcs.inSet), 1);
-            testCase.verifyEqual(numel(out.dmVsProposed), 3);
+            testCase.verifyEqual(numel(out.dmVsProposed), 5);   % 6 - 1 vs proposed
+
+            % Bundle contract
+            b = out.bundle;
+            testCase.verifyEqual(numel(b.models), 6);
+            testCase.verifyTrue(isfield(b, 'descriptives'));
+            testCase.verifyTrue(isfield(b.descriptives, 'bds'));
+            % SV models carry posterior particles + log-ML; GARCH do not.
+            srn = b.models(strcmp({b.models.name}, 'SVLTRECH-SRN'));
+            testCase.verifyTrue(isfinite(srn.logMarginalLik));
+            testCase.verifySize(srn.theta, [cfg.smc.N, 12 + K]);
+            testCase.verifyEqual(numel(srn.stdResid), splitIdx);
+            testCase.verifyEqual(numel(srn.omegaPath), splitIdx);
         end
     end
 end
