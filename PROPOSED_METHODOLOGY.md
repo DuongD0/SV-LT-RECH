@@ -269,7 +269,14 @@ For Vietnamese application (2,262 obs): 1,500 train / 762 test (matches Paper B 
 
 ## 7. Baseline & Benchmark Models
 
-We fit five benchmarks so the contribution of the proposed SV-LT-RECH is clearly isolated.
+We fit a symmetric grid of benchmarks so the contribution of the proposed SV-LT-RECH — and, more generally, of the deep-learning augmentation — is cleanly isolated:
+
+|                  | no deep learning            | + deep learning (SRN/LSTM/GRU)        |
+|------------------|-----------------------------|----------------------------------------|
+| GARCH backbone   | GARCH-t (§7.1), GJR-t (§7.2) | GARCH-RECH (§7.6)                      |
+| SV backbone      | SV (§7.5a), SVM (§7.5d), SVLT (§7.5c) | SV-LT-RECH (§8.2, flagship)     |
+
+All models are fit on the **mean-equation residuals** (§3): the Stage-4 pipeline runs the ARMA(p,q) Ljung-Box auto-gate first and feeds ε̂ₜ to every variance model, so no comparison is contaminated by conditional-mean autocorrelation.
 
 ### 7.1 GARCH(1,1) with Student's t innovations
 
@@ -319,7 +326,29 @@ hₜ = μ + φ (hₜ₋₁ − μ) + σ_η ηₜ,   ηₜ ~ N(0,1),  |φ| < 1
 corr(εₜ, ηₜ₊₁) = ρ           (typical ρ ∈ [-0.7, 0])
 ```
 
+**(d) SVM — Stochastic Volatility in Mean (Koopman & Hol Uspensky 2002):** the latent volatility enters the *mean* equation, capturing the intertemporal risk–return trade-off (volatility feedback / risk premium):
+
+```
+rₜ = α₀ + λ · exp(hₜ) + exp(hₜ/2) · εₜ,    εₜ ~ N(0,1)
+hₜ = μ + φ (hₜ₋₁ − μ) + σ_η ηₜ,            ηₜ ~ N(0,1),  |φ| < 1
+```
+The variance-in-mean term `λ · exp(hₜ) = λ σₜ²` (Koopman's `β₂ e^{hₜ}`): `λ > 0` ⇒ positive risk premium, `λ < 0` ⇒ negative volatility feedback. Gaussian innovations match Koopman & Hol Uspensky; the scale-mixture (Student-t / slash) generalisation is Abanto-Valle et al. (2017). `θ = [μ, φ, σ_η, α₀, λ]`. Implemented as `models.SVM` (+ `priors.logPriorSVM`); fit by the same SMC engine as the other SV models, so it slots directly into the Stage-4 comparison.
+
 These are the **SV-side baselines** we beat in the empirical section.
+
+### 7.6 GARCH-RECH — the GARCH deep-learning baseline (Nguyen, Tran & Kohn 2022)
+
+The original *Recurrent Conditional Heteroskedasticity* model: a GARCH(1,1) whose constant `ω` is replaced by an RNN-driven time-varying component. It is the **GARCH-backbone counterpart of our SV-backbone SV-LT-RECH (§8.2)** — including it makes the deep-learning comparison symmetric across backbones (the "GARCH deep learning" cell of the §7 grid).
+
+```
+rₜ  = σₜ εₜ,                       εₜ ~ t(ν),  ν > 2
+σₜ² = ωₜ + α rₜ₋₁² + β σₜ₋₁²
+ωₜ  = β₀ + β₁ sₜ                                  (RNN-driven "constant")
+sₜ  = RNNcell(xₜ, sₜ₋₁),   xₜ = [σₜ₋₁², rₜ₋₁, ωₜ₋₁, zₜ₋₁],   s₁ = 0
+```
+`RNNcell ∈ {SRN, LSTM, GRU}` — the **same `+cells` primitives** the SV models use, so the input/covariate structure mirrors SV-LT-RECH exactly. Because `σₜ²` is deterministic given `(θ, data)`, the conditional likelihood is exact and the model is fit by **maximum likelihood** (no SMC needed). Constraints `α,β ≥ 0`, `α+β < 1`, `ν > 2` are enforced through an unconstrained reparameterisation (persistence/split logits, softplus); `σₜ²` is floored at `1e-8`. Implemented as `garch.fitGarchRECH` + `garch.rollingForecastRECH` (shared recursion `garch.rechCondVar`); registry variants `GARCH-RECH-{SRN,LSTM,GRU}`.
+
+References: Nguyen, Tran & Kohn (2022), *Recurrent Conditional Heteroskedasticity*, J. Appl. Econometrics 37(5); the covariate extension is RECH-X (Paper A).
 
 ---
 

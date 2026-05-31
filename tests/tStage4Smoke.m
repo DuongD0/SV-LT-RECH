@@ -30,16 +30,19 @@ classdef tStage4Smoke < matlab.unittest.TestCase
             cfg.forecast = struct('J', 15);
             cfg.eval     = struct('alphaQS', [0.01, 0.05], 'mcsB', 200);
             cfg.particleFilter = struct('clipLogWeight', -50);
+            cfg.garchRech = struct('restarts', 1, 'maxEval', 800);   % fast smoke
             cfg.baseSeed = 20260516;
 
             out = experiments.runStage4(y, Z, splitIdx, cfg);
 
-            expected = {'GARCH-t','GJR-t','SVLT','SVLTRECH-SRN', ...
-                        'SVLTRECH-LSTM','SVLTRECH-GRU'};
+            expected = {'GARCH-t','GJR-t', ...
+                        'GARCH-RECH-SRN','GARCH-RECH-LSTM','GARCH-RECH-GRU', ...
+                        'SV','SVM','SVLT', ...
+                        'SVLTRECH-SRN','SVLTRECH-LSTM','SVLTRECH-GRU'};
             testCase.verifyEqual(out.modelNames, expected);
 
             S = out.scores;
-            testCase.verifyEqual(numel(S), 6);
+            testCase.verifyEqual(numel(S), 11);
             for m = 1:numel(S)
                 testCase.verifyTrue(isfinite(S(m).pps));
                 testCase.verifyTrue(isfinite(S(m).qlike));
@@ -48,11 +51,12 @@ classdef tStage4Smoke < matlab.unittest.TestCase
             end
 
             testCase.verifyGreaterThanOrEqual(sum(out.mcs.inSet), 1);
-            testCase.verifyEqual(numel(out.dmVsProposed), 5);   % 6 - 1 vs proposed
+            testCase.verifyEqual(numel(out.dmVsProposed), 10);  % 11 - 1 vs proposed
 
             % Bundle contract
             b = out.bundle;
-            testCase.verifyEqual(numel(b.models), 6);
+            testCase.verifyEqual(numel(b.models), 11);
+            testCase.verifyTrue(isfield(b.data, 'meanEquation'));
             testCase.verifyTrue(isfield(b, 'descriptives'));
             testCase.verifyTrue(isfield(b.descriptives, 'bds'));
             % SV models carry posterior particles + log-ML; GARCH do not.

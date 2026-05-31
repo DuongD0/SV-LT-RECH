@@ -9,6 +9,21 @@ Extension of:
 
 Both papers swap their GARCH backbone for a Stochastic Volatility backbone; everything else (Student-t innovations, leverage, RNN-augmented long-term volatility, exogenous covariates, Bayesian SMC inference) is preserved or strengthened.
 
+## Models compared
+
+A symmetric grid isolates the effect of the deep-learning augmentation across both backbones (all models fit on ARMA mean-equation residuals — an automatic Ljung-Box gate decides zero-mean vs ARMA(p,q)):
+
+|                  | no deep learning              | + deep learning (SRN / LSTM / GRU)        |
+|------------------|-------------------------------|--------------------------------------------|
+| **GARCH** backbone | `GARCH-t`, `GJR-t`          | `GARCH-RECH-{SRN,LSTM,GRU}` (Nguyen-Tran-Kohn 2022) |
+| **SV** backbone    | `SV`, `SVM` (in-mean), `SVLT` | `SVLTRECH-{SRN,LSTM,GRU}` (flagship)      |
+
+Ranked by QLIKE, Diebold-Mariano tests, and the Model Confidence Set. **`SVM`** (stochastic volatility in mean, Koopman & Hol Uspensky 2002) and **`GARCH-RECH`** (the GARCH deep-learning baseline) were added so the standard-SV / in-mean and the GARCH-DL / SV-DL comparisons are both complete. See `PROPOSED_METHODOLOGY.md` §7.5d, §7.6.
+
+## Easiest way to run
+
+Self-contained, single-file versions live in **`standalone/`** — no `+package` setup, no `addpath`. Run `standalone/run_comparison.m` for the full comparison, or any `standalone/model_*.m` for one model. See **`PROFESSOR_GUIDE.md`** for a step-by-step guide (including MATLAB activation and toolbox requirements).
+
 ## Layout
 
 ```
@@ -70,7 +85,17 @@ Every experiment is driven by a YAML config under `config/experiments/`. Random 
 
 ## Status
 
-Phase 1 + Phase 2 complete and verified — `runtests('tests')` reports **30/30 passing** in MATLAB R2026a. See `docs/PHASE_1_2_COMPLETE.md` for the full inventory and the Phase 3 specification.
+Phases 1–6 complete (see `docs/PHASE_*.md`): SMC engine + bootstrap PF, the full
+SV model family, GARCH baselines, the Stage-4 comparison pipeline, and the T1–T7 /
+F1–F4 reporting layer.
+
+This round added: **`models.SVM`** (SV-in-mean) and **`garch.fitGarchRECH`** (the
+GARCH deep-learning baseline, SRN/LSTM/GRU variants), wired the **ARMA mean-equation
+auto-gate** into the Stage-4 pipeline (all models now fit on residuals), expanded the
+model registry to the 11-model grid above, and added the **`standalone/`** single-file
+build. New tests accompany each: `tSvmRoundTrip`, `tGarchRECH`, and the updated
+`tStage4Models` / `tStage4Smoke`. Run `runtests('tests')` in MATLAB R2026a to verify
+in your environment.
 
 ## License
 

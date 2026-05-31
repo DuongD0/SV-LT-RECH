@@ -22,6 +22,8 @@ function out = meanEquation(y, opts)
 %     out.bic        : selected BIC (NaN if zero-mean)
 %     out.ljungH     : Ljung-Box decision on RAW returns at ljungLag
 %     out.ljungP     : Ljung-Box p-value on RAW returns at ljungLag
+%     out.model      : fitted arima object (for out-of-sample mean forecasts
+%                      via infer/forecast), or [] when zero-mean is used
 %
 %   Protocol (PROPOSED_METHODOLOGY.md §3):
 %     1. Run Ljung-Box on y at lag = ljungLag.
@@ -56,6 +58,7 @@ function out = meanEquation(y, opts)
         out.bic       = NaN;
         out.ljungH    = ljungH(end);
         out.ljungP    = ljungP(end);
+        out.model     = [];
         return
     end
 
@@ -91,6 +94,7 @@ function out = meanEquation(y, opts)
         out.bic = NaN;
         out.ljungH = ljungH(end);
         out.ljungP = ljungP(end);
+        out.model  = [];
         return
     end
 
@@ -101,6 +105,7 @@ function out = meanEquation(y, opts)
     out.bic       = bestBic;
     out.ljungH    = ljungH(end);
     out.ljungP    = ljungP(end);
+    out.model     = bestModel;
 end
 
 

@@ -36,6 +36,14 @@ function out = runStage4(y, Z, splitIdx, cfg, opts)
 
     utils.reproducibility(cfg.baseSeed);
 
+    %% Mean equation (ARMA auto-gate, PROPOSED_METHODOLOGY.md §3). Every
+    %% variance model is fit on the mean-equation RESIDUALS so the
+    %% conditional-variance comparison is not contaminated by serial
+    %% correlation in the conditional mean. White-noise returns pass
+    %% through unchanged (zero-mean). Override via cfg.mean.force.
+    yRaw          = y;
+    [y, meanInfo] = applyMeanEquation(yRaw, splitIdx, cfg);
+
     T       = numel(y);
     testIdx = (splitIdx + 1 : T)';
     yTest   = y(testIdx);
@@ -82,15 +90,15 @@ function out = runStage4(y, Z, splitIdx, cfg, opts)
     %% Model Confidence Set on per-step QLIKE loss.
     mcs = eval.modelConfidenceSet(qlAll, struct('B', cfg.eval.mcsB));
 
-    %% In-sample descriptives + diagnostics (T1 record).
-    descr = describeSeries(y(1:splitIdx));
+    %% In-sample descriptives + diagnostics (T1 record) on the RAW returns.
+    descr = describeSeries(yRaw(1:splitIdx));
 
     %% Assemble bundle (design spec §4.1).
     bundle.meta = struct('expName', opts.expName, ...
                          'date', char(datetime('now', 'Format', 'yyyy-MM-dd')), ...
                          'cfg', cfg, 'baseSeed', cfg.baseSeed, 'modelNames', {modelNames});
-    bundle.data = struct('y', y, 'Z', Z, 'splitIdx', splitIdx, 'testIdx', testIdx, ...
-                         'nCovariates', K);
+    bundle.data = struct('y', yRaw, 'resid', y, 'Z', Z, 'splitIdx', splitIdx, ...
+                         'testIdx', testIdx, 'nCovariates', K, 'meanEquation', meanInfo);
     bundle.descriptives = descr;
     bundle.models       = models_;
     bundle.comparison   = struct('modelNames', {modelNames}, 'scores', scores, ...
@@ -133,14 +141,37 @@ function rec = fitOneModel(spec, y, Z, splitIdx, K, smcOpts, pfOpts, J, cfg)
         return;
     end
 
-    % --- SV / RECH model ---
+    if strcmp(spec.kind, 'garchrech')
+        % GARCH-RECH deep-learning baseline (MLE; reuses +cells via garch.*).
+        grOpts = struct('cell', spec.cell, 'dist', 't', ...
+                        'restarts', 3, 'maxEval', 4000, 'verbose', false);
+        if isfield(cfg, 'garchRech'); grOpts = mergeStruct(grOpts, cfg.garchRech); end
+        if K > 0; grOpts.Z = Z(1:splitIdx, :); else; grOpts.Z = []; end
+
+        fit = garch.fitGarchRECH(y(1:splitIdx), grOpts);
+        rf  = garch.rollingForecastRECH(fit, y, Z, splitIdx);
+        rec.nu             = fit.nu;
+        rec.varForecast    = rf.sigma2Forecast;
+        rec.logPredDensity = rf.logPredDensity;
+        rec.logMarginalLik = NaN;                       % MLE, not SMC
+        rec.sigma2InSample = fit.condVar;
+        rec.stdResid       = standardizeResid(y(1:splitIdx), fit.condVar, fit.nu);
+        rec.omegaPath      = fit.omegaPath;
+        [rec.paramNames, rec.posteriorMean, rec.posteriorStd] = garchRechParams(fit);
+        rec.theta          = [];
+        return;
+    end
+
+    % --- SV / RECH model (SMC) ---
     mdl = spec.ctor(K, cfg.model.leverage);
     if ismethod(mdl, 'setCovariates') && mdl.nCovariates > 0
         mdl.setCovariates(Z(1:splitIdx, :));
     end
     res      = inference.smc.likelihoodAnneal(mdl, y(1:splitIdx), smcOpts);
     thetaBar = mean(res.theta, 1);
-    nu       = thetaBar(5);
+    pn       = mdl.paramNames();
+    nuIdx    = find(strcmp(pn, 'nu'), 1);
+    if isempty(nuIdx); nu = Inf; else; nu = thetaBar(nuIdx); end   % Gaussian (SV/SVM) -> Inf
 
     % In-sample filtered states -> sigma2, std residuals, omega (RECH only).
     [~, hF] = inference.pf.bootstrap(mdl, y(1:splitIdx), thetaBar, ...
@@ -186,11 +217,20 @@ end
 
 
 function [sc, qlSeries] = scoreModel(varF, lpd, nu, yTest, rvProxy, rvSqrt, alphaQS)
-    vHat   = sqrt(varF);
-    tScale = sqrt((nu - 2) / nu);
+    vHat = sqrt(varF);
+    % Standardised innovation quantiles: Gaussian (nu=Inf) -> normal,
+    % otherwise the unit-variance scaled-t quantile tinv*sqrt((nu-2)/nu).
+    if isinf(nu)
+        z1 = norminv(alphaQS(1));
+        z2 = norminv(alphaQS(2));
+    else
+        tScale = sqrt((nu - 2) / nu);
+        z1 = tinv(alphaQS(1), nu) * tScale;
+        z2 = tinv(alphaQS(2), nu) * tScale;
+    end
     sc.pps   = eval.pps(lpd);
-    sc.qs1   = eval.quantileScore(yTest, vHat .* tinv(alphaQS(1), nu) .* tScale, alphaQS(1));
-    sc.qs5   = eval.quantileScore(yTest, vHat .* tinv(alphaQS(2), nu) .* tScale, alphaQS(2));
+    sc.qs1   = eval.quantileScore(yTest, vHat .* z1, alphaQS(1));
+    sc.qs5   = eval.quantileScore(yTest, vHat .* z2, alphaQS(2));
     mm       = eval.mseMae(rvSqrt, vHat);
     sc.mse   = mm.mse;
     sc.mae   = mm.mae;
@@ -227,6 +267,16 @@ function [names, mu, sd] = garchParams(fit, garchType)
 end
 
 
+function [names, mu, sd] = garchRechParams(fit)
+% Point estimates for the GARCH-RECH baseline as a degenerate posterior
+% (std = NaN). The RNN weights are summarised by beta_0/beta_1; the full
+% cell-weight struct lives on fit.cellWeights for interpretability.
+    names = {'alpha', 'beta', 'beta0', 'beta1', 'nu'};
+    mu    = [fit.alpha, fit.beta, fit.beta0, fit.beta1, fit.nu];
+    sd    = nan(size(mu));
+end
+
+
 function descr = describeSeries(y)
     rd = data.preprocess.residualDiagnostics(y);
     st = data.preprocess.stationarityTests(y);
@@ -254,6 +304,28 @@ function writeStage4Outputs(bundle, outDir)
     tbl = cell2table(rows, 'VariableNames', ...
         {'model','PPS','QS1','QS5','MSE','MAE','R2LOG','QLIKE'});
     writetable(tbl, fullfile(outDir, 'scores.csv'));
+end
+
+
+function [resid, info] = applyMeanEquation(yRaw, splitIdx, cfg)
+% Fit the mean equation on the in-sample window and return the full-series
+% residuals (fixed-parameter rolling). The Ljung-Box auto-gate decides
+% zero-mean vs ARMA(p,q); white-noise returns pass straight through.
+% Override via cfg.mean (force/alpha/ljungLag/maxP/maxQ).
+    mopts = struct('force', 'auto', 'alpha', 0.05, 'ljungLag', 10, ...
+                   'maxP', 3, 'maxQ', 3);
+    if isfield(cfg, 'mean'); mopts = mergeStruct(mopts, cfg.mean); end
+
+    meanEq = data.preprocess.meanEquation(yRaw(1:splitIdx), mopts);
+    if meanEq.usedARMA && ~isempty(meanEq.model)
+        resid = infer(meanEq.model, yRaw);   % full-series 1-step residuals
+    else
+        resid = yRaw;                        % zero-mean: residual == return
+    end
+
+    info = struct('usedARMA', meanEq.usedARMA, 'p', meanEq.p, 'q', meanEq.q, ...
+                  'bic', meanEq.bic, 'ljungH', meanEq.ljungH, ...
+                  'ljungP', meanEq.ljungP, 'force', mopts.force);
 end
 
 

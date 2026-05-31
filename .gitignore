@@ -15,6 +15,10 @@ sccprj/
 *.m.autosave
 *.dmr
 
+# Local MATLAB install (downloaded via mpm; proprietary — do not commit)
+MATLAB_R2026a/
+mpm
+
 # R
 .Rhistory
 .RData

@@ -1,15 +1,24 @@
 classdef tStage4Models < matlab.unittest.TestCase
-% tStage4Models  The 6-model Stage-4 registry has the expected shape.
+% tStage4Models  The Stage-4 registry has the expected (11-model) shape.
 
     methods (Test)
         function registryShape(testCase)
             reg = experiments.stage4Models();
             names = {reg.name};
             testCase.verifyEqual(names, ...
-                {'GARCH-t','GJR-t','SVLT','SVLTRECH-SRN', ...
-                 'SVLTRECH-LSTM','SVLTRECH-GRU'});
+                {'GARCH-t','GJR-t', ...
+                 'GARCH-RECH-SRN','GARCH-RECH-LSTM','GARCH-RECH-GRU', ...
+                 'SV','SVM','SVLT', ...
+                 'SVLTRECH-SRN','SVLTRECH-LSTM','SVLTRECH-GRU'});
             testCase.verifyEqual(sum([reg.isProposed]), 1);   % exactly one proposed
             testCase.verifyEqual(reg(strcmp(names,'SVLTRECH-SRN')).isProposed, true);
+        end
+
+        function garchRechEntriesCarryCell(testCase)
+            reg = experiments.stage4Models();
+            gr  = reg(strcmp({reg.name}, 'GARCH-RECH-LSTM'));
+            testCase.verifyEqual(gr.kind, 'garchrech');
+            testCase.verifyEqual(gr.cell, 'lstm');
         end
 
         function svConstructorsBuild(testCase)
